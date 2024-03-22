@@ -125,15 +125,15 @@ The appended values are based on the PID algorithm, the controller mode, and fee
    
                        
     #Manual Mode + Anti Wind-up
-    """elif(Man[-1] == True):
+    elif(Man[-1] == True):
         if ManFF:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1]
-            print("True ManFF")
-        else:
+
+        """else:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1] - MVFF[-1]
-            print("True else Manff")
+        """
             
-        MVToAppend = MVMan"""
+        MVToAppend = MVMan[-1]
     
             
     #Anti Saturation Mechanism
