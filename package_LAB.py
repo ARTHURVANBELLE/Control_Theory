@@ -11,7 +11,23 @@ from package_DBR import myRound, SelectPath_RT, Delay_RT, FO_RT, FOPDT, SOPDT, F
 def LeadLag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD'):
     
     """
-    L
+    LeadLage_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD')
+        The function "LeadLag_RT" needs to be included in a "for or while loop".
+
+        :MV: input vector
+        :Kp: process gain
+        :Tlead: lead time constant [s]
+        :Tlag: lag time constant [s]
+        :Ts: sampling period [s]
+        :PV: output vector
+        :PVInit: (optional : default value is 0)
+        :method: discretisation method (optional : default value is 'EBD')
+            EBD: Euler Backward Difference
+            EFD: Euler Forward Difference
+            TRAP: Trapezoïdal method
+
+        The function appends a value to the output vectot "PV".
+        The appended value is obtained from a recurrent equation that depends on the discretisation method.
     
     """
     if (Tlead & Tlag != 0):
