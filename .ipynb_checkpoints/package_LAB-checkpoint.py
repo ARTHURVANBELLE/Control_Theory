@@ -11,23 +11,7 @@ from package_DBR import myRound, SelectPath_RT, Delay_RT, FO_RT, FOPDT, SOPDT, F
 def LeadLag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD'):
     
     """
-    LeadLag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD')
-        The function "LeadLag_RT" needs to be included in a "for or while loop".
-
-        :MV: input vector
-        :Kp: process gain
-        :Tlead: lead time constant [s]
-        :Tlag: lag time constant [s]
-        :Ts: sampling period [s]
-        :PV: output vector
-        :PVInit: (optional : default value is 0)
-        :method: discretisation method (optional : default value is 'EBD')
-            EBD: Euler Backward Difference
-            EFD: Euler Forward Difference
-            TRAP: Trapezoïdal method
-
-        The function appends a value to the output vectot "PV".
-        The appended value is obtained from a recurrent equation that depends on the discretisation method.
+    L
     
     """
     if (Tlead & Tlag != 0):
@@ -116,7 +100,8 @@ The appended values are based on the PID algorithm, the controller mode, and fee
             MVI.append(MVI[-1] + (0.5*Kc*Ts/Ti)*(E[-1]+E[-2]))
         else: #'EBD'
             MVI.append(MVI[-1] + ((Kc*Ts/Ti)*E[-1] ))
-            
+
+        
     #Init of MVD
     if len(MVD) == 0:
         MVD.append(((Kc*Td)/(Tfd+Ts/2))*(E[-1]))
@@ -125,29 +110,39 @@ The appended values are based on the PID algorithm, the controller mode, and fee
             MVD.append(MVI[-1] + (0.5*Kc*Ts/Ti)*(E[-1]+E[-2]))
         else: #'EBD'
             MVD.append((Tfd-Ts/2)/(Tfd+Ts/2)*MVD[-1]+((Kc*Td)/(Tfd+Ts/2))*(E[-1]-E[-2]))
-                       
+
+    
     #Mode Automatic        
-    if (Man[-1] == False & len(MVI)>=2): 
+    if (Man[-1] == False and len(MVI)>=2): 
         MVP.append(Kc*E[-1])
         MVI.append(MVI[-2] + ((Kc*Ts)/Ti) * E[-1]) #MVI[-2] ?
         MVD.append((Tfd-Ts/2)/(Tfd+Ts/2)*MVD[-2]+((Kc*Td)/(Tfd+Ts/2))*(E[-1]-E[-2]))
         MV.append(MVP[-1]+MVI[-1]+MVD[-1])
+   
                        
     #Manual Mode + Anti Wind-up
-    elif(Man[-1] == True):
+    """elif(Man[-1] == True):
         if ManFF:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1]
+            print("True ManFF")
         else:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1] - MVFF[-1]
-                       
-        MV.append(MVMan)
+            print("True else Manff")
+            
+        MV.append(MVMan)"""
     
     #Anti Saturation Mechanism
-    if(len(MVP)>=1):
+    """if(len(MVP)>=1):
         if ((MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]) > MVMax):
             MVI[-1] = MVP[-1] - MVD[-1] - MVFF[-1] - MVMax
         elif ((MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]) < MVMin):
-            MVI[-1] = MVP[-1] - MVD[-1] - MVFF[-1] - MVMax
+            MVI[-1] = MVP[-1] - MVD[-1] - MVFF[-1] - MVMax"""
+            
+        #Anti Saturation Mechanism
+    if(len(MVP)>=1):
+        if ((MVP[-1] + MVI[-1] + MVD[-1]) > MVMax):
+            MVI[-1] = MVP[-1] - MVD[-1] - MVMax
+        elif ((MVP[-1] + MVI[-1] + MVD[-1]) < MVMin):
+            MVI[-1] = MVP[-1] - MVD[-1] - MVMax
 
-    return(MV[-1])
         
