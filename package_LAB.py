@@ -11,7 +11,7 @@ from package_DBR import myRound, SelectPath_RT, Delay_RT, FO_RT, FOPDT, SOPDT, F
 def LeadLag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD'):
     
     """
-    LeadLage_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD')
+    LeadLag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD')
         The function "LeadLag_RT" needs to be included in a "for or while loop".
 
         :MV: input vector
