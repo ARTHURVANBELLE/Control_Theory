@@ -41,7 +41,7 @@ def LeadLag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD'):
     return ()
 
 #-----------------------------------        
-def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Td, Ti, Td, alpha, Ts, MVMin, MV, MV, MVP, MVI, MVD, E, ManFF=False, PVInit=0, method='EBD-EBD')
+def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MVP, MVI, MVD, E, ManFF=False, PVInit=0, method='EBD-EBD'):
     
     """
     The function "PID_RT" needs to be included in a "for or while loop".
@@ -81,12 +81,16 @@ The appended values are based on the PID algorithm, the controller mode, and fee
     # MV[k] is MV[-1] and MV[k-1] is MV[-2] because we're creating it in real time
     
     Tfd = alpha*Td
+
+    methods = method.split("-")
+    methodI = methods[0]
+    methodD = methods[1]
     
     #Init of E
     if len(PV) == 0:
         E.append(SP[-1] - PVInit)
     else:
-        E.append(SP[-1] - PVInit[-1])
+        E.append(SP[-1] - PV[-1])
     
     #Init of MVI
     if len(MVI) == 0:
@@ -94,18 +98,40 @@ The appended values are based on the PID algorithm, the controller mode, and fee
     else:
         if methodI == 'TRAP':
             MVI.append(MVI[-1] + (0.5*Kc*Ts/Ti)*(E[-1]+E[-2]))
-        else:
-            MVI.append(MVI[-1] + ((Kc*Ts/Ti)*E[-1] )
+        else: #'EBD'
+            MVI.append(MVI[-1] + ((Kc*Ts/Ti)*E[-1] ))
+            
+    #Init of MVD
+    if len(MVD) == 0:
+        MVD.append(((Kc*Td)/(Tfd+Ts/2))*(E[-1]))
+    else:
+        if methodD == 'TRAP':
+            MVD.append(MVI[-1] + (0.5*Kc*Ts/Ti)*(E[-1]+E[-2]))
+        else: #'EBD'
+            MVD.append((Tfd-Ts/2)/(Tfd+Ts/2)*MVD[-1]+((Kc*Td)/(Tfd+Ts/2))*(E[-1]-E[-2]))
                        
     #Mode Automatic        
-    if (MAN == False): 
+    if (Man[-1] == False & len(MVI)>=2): 
         MVP.append(Kc*E[-1])
-        MVI.append(MVI[-2] +  ((Kc*TS)/Ti) * E[-1])
+        MVI.append(MVI[-2] + ((Kc*Ts)/Ti) * E[-1]) #MVI[-2] ?
         MVD.append((Tfd-Ts/2)/(Tfd+Ts/2)*MVD[-2]+((Kc*Td)/(Tfd+Ts/2))*(E[-1]-E[-2]))
         MV.append(MVP[-1]+MVI[-1]+MVD[-1])
                        
-    #Mode Manual
-    elif(MAN == True):
-        return()
-        
+    #Manual Mode + Anti Wind-up
+    elif(Man[-1] == True):
+        if ManFF:
+            MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1]
+        else:
+            MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1] - MVFF[-1]
+                       
+        MV.append(MVMan)
+    
+    #Anti Saturation Mechanism
+    if(len(MVP)>=1):
+        if ((MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]) > MVMax):
+            MVI[-1] = MVP[-1] - MVD[-1] - MVFF[-1] - MVMax
+        elif ((MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]) < MVMin):
+            MVI[-1] = MVP[-1] - MVD[-1] - MVFF[-1] - MVMax
+
+    return(MV[-1])
         
