@@ -81,6 +81,7 @@ The appended values are based on the PID algorithm, the controller mode, and fee
     # MV[k] is MV[-1] and MV[k-1] is MV[-2] because we're creating it in real time
     
     Tfd = alpha*Td
+    MVToAppend = SP[-1]
 
     methods = method.split("-")
     methodI = methods[0]
@@ -89,8 +90,10 @@ The appended values are based on the PID algorithm, the controller mode, and fee
     #Init of E
     if len(PV) == 0:
         E.append(SP[-1] - PVInit)
+        
     else:
         E.append(SP[-1] - PV[-1])
+    #print(E[-1])
     
     #Init of MVI
     if len(MVI) == 0:
@@ -117,7 +120,8 @@ The appended values are based on the PID algorithm, the controller mode, and fee
         MVP.append(Kc*E[-1])
         MVI.append(MVI[-2] + ((Kc*Ts)/Ti) * E[-1]) #MVI[-2] ?
         MVD.append((Tfd-Ts/2)/(Tfd+Ts/2)*MVD[-2]+((Kc*Td)/(Tfd+Ts/2))*(E[-1]-E[-2]))
-        MV.append(MVP[-1]+MVI[-1]+MVD[-1])
+        MVToAppend = MVP[-1]+MVI[-1]+MVD[-1]
+        
    
                        
     #Manual Mode + Anti Wind-up
@@ -129,20 +133,20 @@ The appended values are based on the PID algorithm, the controller mode, and fee
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1] - MVFF[-1]
             print("True else Manff")
             
-        MV.append(MVMan)"""
+        MVToAppend = MVMan"""
     
-    #Anti Saturation Mechanism
-    """if(len(MVP)>=1):
-        if ((MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]) > MVMax):
-            MVI[-1] = MVP[-1] - MVD[-1] - MVFF[-1] - MVMax
-        elif ((MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]) < MVMin):
-            MVI[-1] = MVP[-1] - MVD[-1] - MVFF[-1] - MVMax"""
             
-        #Anti Saturation Mechanism
-    if(len(MVP)>=1):
-        if ((MVP[-1] + MVI[-1] + MVD[-1]) > MVMax):
-            MVI[-1] = MVP[-1] - MVD[-1] - MVMax
-        elif ((MVP[-1] + MVI[-1] + MVD[-1]) < MVMin):
-            MVI[-1] = MVP[-1] - MVD[-1] - MVMax
+    #Anti Saturation Mechanism
+    if (MVToAppend > MVMax):      #Max
+        MVI[-1] = MVP[-1] - MVD[-1] - MVMax
+        if (Man[-1] == False):
+            MVToAppend = MVP[-1]+MVI[-1]+MVD[-1]
+            
+    elif (MVToAppend < MVMin):    #Min
+        MVI[-1] =  MVMin - MVP[-1] - MVD[-1]
+        if (Man[-1] == False):
+            MVToAppend = 0
 
         
+    if(len(SP) >= 2):
+        MV.append(MVToAppend)
