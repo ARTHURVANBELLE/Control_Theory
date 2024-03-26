@@ -11,10 +11,25 @@ from package_DBR import myRound, SelectPath_RT, Delay_RT, FO_RT, FOPDT, SOPDT, F
 def LeadLag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD'):
     
     """
-    L
+
+    LeadLag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD')
+        The function "LeadLag_RT" needs to be included in a "for or while loop".
+        :MV: input vector
+        :Kp: process gain
+        :Tlead: lead time constant [s]
+        :Tlag: lag time constant [s]
+        :Ts: sampling period [s]
+        :PV: output vector
+        :PVInit: (optional : default value is 0)
+        :method: discretisation method (optional : default value is 'EBD')
+            EBD: Euler Backward Difference
+            EFD: Euler Forward Difference
+            TRAP: Trapezoïdal method
+        The function appends a value to the output vectot "PV".
+        The appended value is obtained from a recurrent equation that depends on the discretisation method.
     
     """
-    if (Tlead & Tlag != 0):
+    if (Tlead != 0 and Tlag != 0):
         K = Ts/Tlag
         if len(PV) == 0:
             PV.append(PVInit)
@@ -89,25 +104,30 @@ The appended values are based on the PID algorithm, the controller mode, and fee
     
     #Init of E
     if len(PV) == 0:
-        E.append(SP[-1] - PVInit)
-        
+        E.append(SP[-1] - PVInit)    
     else:
         E.append(SP[-1] - PV[-1])
-    #print(E[-1])
+
+    
+    #Init of MVP
+    if len(MVP) == 0:
+        MVP.append(0)
     
     #Init of MVI
     if len(MVI) == 0:
         MVI.append((Kc*Ts/Ti)*E[-1])
-    else:
+    
+    #elif len(MVI) == 1 :
+    else :
         if methodI == 'TRAP':
             MVI.append(MVI[-1] + (0.5*Kc*Ts/Ti)*(E[-1]+E[-2]))
         else: #'EBD'
             MVI.append(MVI[-1] + ((Kc*Ts/Ti)*E[-1] ))
-
         
     #Init of MVD
     if len(MVD) == 0:
         MVD.append(((Kc*Td)/(Tfd+Ts/2))*(E[-1]))
+    #elif len(MVD) == 1:
     else:
         if methodD == 'TRAP':
             MVD.append(MVI[-1] + (0.5*Kc*Ts/Ti)*(E[-1]+E[-2]))
@@ -117,11 +137,11 @@ The appended values are based on the PID algorithm, the controller mode, and fee
     
     #Mode Automatic        
     if (Man[-1] == False and len(MVI)>=2): 
-        MVP.append(Kc*E[-1])
-        MVI.append(MVI[-2] + ((Kc*Ts)/Ti) * E[-1]) #MVI[-2] ?
-        MVD.append((Tfd-Ts/2)/(Tfd+Ts/2)*MVD[-2]+((Kc*Td)/(Tfd+Ts/2))*(E[-1]-E[-2]))
-        MVToAppend = MVP[-1]+MVI[-1]+MVD[-1]
         
+        MVP.append(Kc*E[-1])
+        MVITemp = (MVI[-2] + ((Kc*Ts)/Ti) * E[-1])
+        MVDTemp = ((Tfd-Ts/2)/(Tfd+Ts/2)*MVD[-2]+((Kc*Td)/(Tfd+Ts/2))*(E[-1]-E[-2]))
+        MVToAppend = MVP[-1] + MVITemp + MVDTemp + MVFF[-1]
    
                        
     #Manual Mode + Anti Wind-up
@@ -129,23 +149,24 @@ The appended values are based on the PID algorithm, the controller mode, and fee
         if ManFF:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1]
 
-        """else:
+        else:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1] - MVFF[-1]
-        """
-            
+        
         MVToAppend = MVMan[-1]
+        MVP.append(0)
     
             
     #Anti Saturation Mechanism
     if (MVToAppend > MVMax):      #Max
-        MVI[-1] = MVP[-1] - MVD[-1] - MVMax
+        MVI[-1] = - MVP[-1] - MVD[-1] + MVMax
+      
         if (Man[-1] == False):
             MVToAppend = MVP[-1]+MVI[-1]+MVD[-1]
             
     elif (MVToAppend < MVMin):    #Min
         MVI[-1] =  MVMin - MVP[-1] - MVD[-1]
         if (Man[-1] == False):
-            MVToAppend = 0
+            MVToAppend = MVP[-1]+MVI[-1]+MVD[-1]
 
         
     if(len(SP) >= 2):
