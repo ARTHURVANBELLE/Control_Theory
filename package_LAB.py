@@ -165,6 +165,7 @@ The appended values are based on the PID algorithm, the controller mode, and fee
             
     elif (MVToAppend < MVMin):    #Min
         MVI[-1] =  MVMin - MVP[-1] - MVD[-1] - MVFF[-1]
+        
         if (Man[-1] == False):
             MVToAppend = MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]
 
