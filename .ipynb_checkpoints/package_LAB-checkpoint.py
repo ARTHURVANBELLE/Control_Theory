@@ -174,7 +174,7 @@ The appended values are based on the PID algorithm, the controller mode, and fee
         
         
 #-----------------------------------       
-def Margin(P, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
+def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
     
     """
         Margin function calculates the amplitude and phase margins and optionally plots the Bode plot.
@@ -204,8 +204,13 @@ def Margin(P, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
     - Phim = Phase margin, calculated as difference in degrees between the phase at omegaC and -180 degrees.
 
     """     
-    
+    #Data Init
     s = 1j*omega
+    
+    Kc = C.parameters['Kc']
+    Ti = C.parameters['Ti']
+    Td = C.parameters['Td']
+    Tfd = C.parameters['Tfd']
     
     Ptheta = np.exp(-P.parameters['theta']*s)
     PGain = P.parameters['Kp']*np.ones_like(Ptheta)
@@ -214,12 +219,17 @@ def Margin(P, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
     PLead1 = P.parameters['Tlead1']*s + 1
     PLead2 = P.parameters['Tlead2']*s + 1
     
+    #C(s) Controller :
+    Cs = Kc*(1 + 1 / (Ti*s) + (Td*s)/(Tfd * s + 1))
+    
+    #P(s) Process :
     Ps = np.multiply(Ptheta,PGain)
     Ps = np.multiply(Ps,PLag1)
     Ps = np.multiply(Ps,PLag2)
     Ps = np.multiply(Ps,PLead1)
     Ps = np.multiply(Ps,PLead2)
     
+    Ps = np.multiply(Ps, Cs)
     
     omegaC = None
     index_omegaC = None
@@ -238,15 +248,13 @@ def Margin(P, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
 
     # Get the corresponding frequency
     omegaU = omega[index_omegaU]            
-
-        
+      
     if Show == True:
         
         fig, (ax_gain, ax_phase) = plt.subplots(2,1)
         fig.set_figheight(12)
         fig.set_figwidth(22) 
-        
-        
+            
         yminOmegaU= 20*np.log10(np.abs(Ps[index_omegaU]))
         ymaxOmegaU= 0
         
@@ -259,8 +267,7 @@ def Margin(P, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
         displayPhiMY = (ymaxOmegaC+yminOmegaC)/2
         displayPhiMX = omegaC
         
-        Am = np.abs(ymaxOmegaU - yminOmegaU)
-        
+        Am = np.abs(ymaxOmegaU - yminOmegaU) 
         Phim = np.abs(ymaxOmegaC-yminOmegaC)
 
 
@@ -296,7 +303,7 @@ def Margin(P, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
         ax_phase.set_ylabel('Phase' + '\n $\,$'  + r'$\angle P(j\omega)$ [°]')
         ax_phase.legend(loc='best')        
         
-        return Am, Phim
+        return [Am, Phim]
         
 
     else:
@@ -340,3 +347,14 @@ def IMC_Tuning(T1, T2, T1p, gamma, Kp):
     Td = (T1 * T2) / T1 + T2
     
     return [Kc, Ti, Td] 
+
+#-----------------------------------        
+class PID:
+    
+    def __init__(self, parameters):
+        
+        self.parameters = parameters
+        self.parameters['Kc'] = parameters['Kc'] if 'Kc' in parameters else 1.0
+        self.parameters['Ti'] = parameters['Ti'] if 'Ti' in parameters else 0.0
+        self.parameters['Td'] = parameters['Td'] if 'Td' in parameters else 0.0
+        self.parameters['Tfd'] = parameters['Tfd'] if 'Tfd' in parameters else 0.0  
