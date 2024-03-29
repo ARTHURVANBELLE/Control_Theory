@@ -145,7 +145,7 @@ The appended values are based on the PID algorithm, the controller mode, and fee
    
                        
     #Manual Mode + Anti Wind-up
-    elif(Man[-1] == True):
+    elif(Man[-1] == True and len(MVI)>=2):
         if ManFF:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1]
 
@@ -339,4 +339,4 @@ def IMC_Tuning(T1, T2, T1p, gamma, Kp):
     
     Td = (T1 * T2) / T1 + T2
     
-    return [Kc, Ti, Td, Tclp] 
+    return [Kc, Ti, Td] 
