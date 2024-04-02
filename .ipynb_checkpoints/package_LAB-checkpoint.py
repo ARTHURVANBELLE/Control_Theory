@@ -141,8 +141,12 @@ The appended values are based on the PID algorithm, the controller mode, and fee
         MVP.append(Kc*E[-1])
         MVITemp = (MVI[-2] + ((Kc*Ts)/Ti) * E[-1])
         MVDTemp = ((Tfd-Ts/2)/(Tfd+Ts/2)*MVD[-2]+((Kc*Td)/(Tfd+Ts/2))*(E[-1]-E[-2]))
-        MVToAppend = MVP[-1] + MVITemp + MVDTemp + MVFF[-1]
-   
+        
+        if(ManFF == False):
+            MVToAppend = MVP[-1] + MVITemp + MVDTemp + MVFF[-1]
+        
+        else:
+            MVToAppend = MVP[-1] + MVITemp + MVDTemp
                        
     #Manual Mode + Anti Wind-up
     elif(Man[-1] == True and len(MVI)>=2):
@@ -158,17 +162,32 @@ The appended values are based on the PID algorithm, the controller mode, and fee
             
     #Anti Saturation Mechanism
     if (MVToAppend > MVMax):      #Max
-        MVI[-1] = - MVP[-1] - MVD[-1] - MVFF[-1] + MVMax 
+        if (ManFF == False):
+            MVI[-1] = - MVP[-1] - MVD[-1] - MVFF[-1] + MVMax 
       
-        if (Man[-1] == False):
-            MVToAppend = MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]
+            if (Man[-1] == False):
+                MVToAppend = MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]
+        
+        else:
+            MVI[-1] = - MVP[-1] - MVD[-1] + MVMax 
+      
+            if (Man[-1] == False):
+                MVToAppend = MVP[-1] + MVI[-1] + MVD[-1]
+                
             
     elif (MVToAppend < MVMin):    #Min
-        MVI[-1] =  MVMin - MVP[-1] - MVD[-1] - MVFF[-1]
-        
-        if (Man[-1] == False):
-            MVToAppend = MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]
+        if (ManFF == False):
+            MVI[-1] =  MVMin - MVP[-1] - MVD[-1] - MVFF[-1]
 
+            if (Man[-1] == False):
+                MVToAppend = MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]
+        
+        else:
+            MVI[-1] =  MVMin - MVP[-1] - MVD[-1]
+
+            if (Man[-1] == False):
+                MVToAppend = MVP[-1] + MVI[-1] + MVD[-1]
+        
         
     if(len(SP) >= 2):
         MV.append(MVToAppend)
