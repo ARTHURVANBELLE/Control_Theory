@@ -230,19 +230,19 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
     Ps = np.multiply(Ps,PLead1)
     Ps = np.multiply(Ps,PLead2)
     
-    Ps = np.multiply(Ps, Cs)
+    Ls = Ps * Cs
     
     omegaC = None
     index_omegaC = None
     for i in range(len(omega) - 1):
-        if np.sign(20*np.log10(np.abs(Ps[i]))) != np.sign(20*np.log10(np.abs(Ps[i+1]))):
+        if np.sign(20*np.log10(np.abs(Ls[i]))) != np.sign(20*np.log10(np.abs(Ls[i+1]))):
             omegaC = omega[i]
             index_omegaC = i
             break
             
             
     # Calculate phase values
-    phase_degrees = (180/np.pi)*np.unwrap(np.angle(Ps))
+    phase_degrees = (180/np.pi)*np.unwrap(np.angle(Ls))
 
     # Find the index where phase is closest to -180 degrees
     index_omegaU = np.argmin(np.abs(phase_degrees + 180))
@@ -256,11 +256,11 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
         fig.set_figheight(12)
         fig.set_figwidth(22) 
             
-        yminOmegaU= 20*np.log10(np.abs(Ps[index_omegaU]))
+        yminOmegaU= 20*np.log10(np.abs(Ls[index_omegaU]))
         ymaxOmegaU= 0
         
         yminOmegaC = -180
-        ymaxOmegaC = (180/np.pi)*np.angle(Ps[index_omegaC])
+        ymaxOmegaC = (180/np.pi)*np.angle(Ls[index_omegaC])
         
         displayAmY = (ymaxOmegaU+yminOmegaU)/2
         displayAmX = omegaU
@@ -273,9 +273,9 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
 
 
         # Gain part
-        ax_gain.semilogx(omega,20*np.log10(np.abs(Ps)),label=r'$P(s)$')   
-        gain_min = np.min(20*np.log10(np.abs(Ps/5)))
-        gain_max = np.max(20*np.log10(np.abs(Ps*5)))
+        ax_gain.semilogx(omega,20*np.log10(np.abs(Ls)),label=r'$P(s)$')   
+        gain_min = np.min(20*np.log10(np.abs(Ls/5)))
+        gain_max = np.max(20*np.log10(np.abs(Ls*5)))
         ax_gain.set_xlim([np.min(omega), np.max(omega)])
         ax_gain.set_ylim([gain_min, gain_max])
         ax_gain.axhline(y=0, color='green',linestyle='-')
@@ -290,10 +290,10 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
         ax_gain.legend(loc='best')
     
         # Phase part
-        ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(Ps)),label=r'$P(s)$')   
+        ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(Ls)),label=r'$P(s)$')   
         ax_phase.set_xlim([np.min(omega), np.max(omega)])
-        ph_min = np.min((180/np.pi)*np.unwrap(np.angle(Ps))) - 10
-        ph_max = np.max((180/np.pi)*np.unwrap(np.angle(Ps))) + 10
+        ph_min = np.min((180/np.pi)*np.unwrap(np.angle(Ls))) - 10
+        ph_max = np.max((180/np.pi)*np.unwrap(np.angle(Ls))) + 10
         ax_phase.axhline(y=-180, color='green',linestyle='-')
         ax_phase.axvline(x=omegaU, color='lime', linestyle=':')
         ax_phase.axvline(x=omegaC, color='red', linestyle=':')
@@ -309,8 +309,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
 
     else:
         return Ps
-    
-    
+
 #-----------------------------------       
 
 def IMC_Tuning(T1, T2, T1p, gamma, Kp):
