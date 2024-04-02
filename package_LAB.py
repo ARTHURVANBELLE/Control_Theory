@@ -141,8 +141,12 @@ The appended values are based on the PID algorithm, the controller mode, and fee
         MVP.append(Kc*E[-1])
         MVITemp = (MVI[-2] + ((Kc*Ts)/Ti) * E[-1])
         MVDTemp = ((Tfd-Ts/2)/(Tfd+Ts/2)*MVD[-2]+((Kc*Td)/(Tfd+Ts/2))*(E[-1]-E[-2]))
-        MVToAppend = MVP[-1] + MVITemp + MVDTemp + MVFF[-1]
-   
+        
+        if(ManFF == False):
+            MVToAppend = MVP[-1] + MVITemp + MVDTemp + MVFF[-1]
+        
+        else:
+            MVToAppend = MVP[-1] + MVITemp + MVDTemp
                        
     #Manual Mode + Anti Wind-up
     elif(Man[-1] == True and len(MVI)>=2):
@@ -158,17 +162,32 @@ The appended values are based on the PID algorithm, the controller mode, and fee
             
     #Anti Saturation Mechanism
     if (MVToAppend > MVMax):      #Max
-        MVI[-1] = - MVP[-1] - MVD[-1] - MVFF[-1] + MVMax 
+        if (ManFF == False):
+            MVI[-1] = - MVP[-1] - MVD[-1] - MVFF[-1] + MVMax 
       
-        if (Man[-1] == False):
-            MVToAppend = MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]
+            if (Man[-1] == False):
+                MVToAppend = MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]
+        
+        else:
+            MVI[-1] = - MVP[-1] - MVD[-1] + MVMax 
+      
+            if (Man[-1] == False):
+                MVToAppend = MVP[-1] + MVI[-1] + MVD[-1]
+                
             
     elif (MVToAppend < MVMin):    #Min
-        MVI[-1] =  MVMin - MVP[-1] - MVD[-1] - MVFF[-1]
-        
-        if (Man[-1] == False):
-            MVToAppend = MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]
+        if (ManFF == False):
+            MVI[-1] =  MVMin - MVP[-1] - MVD[-1] - MVFF[-1]
 
+            if (Man[-1] == False):
+                MVToAppend = MVP[-1] + MVI[-1] + MVD[-1] + MVFF[-1]
+        
+        else:
+            MVI[-1] =  MVMin - MVP[-1] - MVD[-1]
+
+            if (Man[-1] == False):
+                MVToAppend = MVP[-1] + MVI[-1] + MVD[-1]
+        
         
     if(len(SP) >= 2):
         MV.append(MVToAppend)
@@ -312,7 +331,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
 
 #-----------------------------------       
 
-def IMC_Tuning(T1, T2, T1p, gamma, Kp):
+def IMC_Tuning(T1, T2, T1p, gamma, Kp, model):
         
     """
         IMC_Tuning calculates the parameters for an Internal Model Control (IMC) tuning method.
@@ -323,30 +342,57 @@ def IMC_Tuning(T1, T2, T1p, gamma, Kp):
     - T1p: Float, time constant of the filter.
     - gamma: Float, tuning parameter.
     - Kp: Float, process gain.
-
-    Returns:
-    - List: A list containing the calculated parameters in the following order:
-        - Kc: Float, controller gain.
-        - Ti: Float, integral time.
-        - Td: Float, derivative time.
-        - Tclp: Float, closed-loop time constant of the process.
+    - model: string, chooses the model to use.
+        - "A" : returns :
+                - List: A list containing the calculated parameters in the following order:
+                        - Kc: Float, controller gain.
+                        - Ti: Float, integral time.
+                        
+        - "B" : returns :
+                - List: A list containing the calculated parameters in the following order:
+                        - Kc: Float, controller gain.
+                        - Ti: Float, integral time.
+                        - Td: Float, derivative time.
 
     Formula used:
-    - Tclp = gamma * T1p
-    - Kc = ((T1 + T2) / Tclp) / Kp
-    - Ti = T1 + T2
-    - Td = (T1 * T2) / (T1 + T2)
+        - "A" : 
+                - Tclp = gamma * T1p
+                - T = T1
+                - Kc = (T / Tclp) / Kp
+                - Ti = T
+                
+        - "B" : 
+                - Tclp = gamma * T1p
+                - Kc = ((T1 + T2) / Tclp) / Kp
+                - Ti = T1 + T2
+                - Td = (T1 * T2) / (T1 + T2)
+                
+                
     """     
     
-    Tclp = gamma * T1p
+    if (model == "A") :
+        
+        Tclp = gamma * T1p
+        
+        T = T1
+        
+        Kc = (T / Tclp) / Kp
+        
+        Ti = T
+        
+        return [Kc, Ti] 
+        
+    if (model == "B") :
     
-    Kc = ((T1 + T2) / Tclp) / Kp
-    
-    Ti = T1 + T2
-    
-    Td = (T1 * T2) / T1 + T2
-    
-    return [Kc, Ti, Td] 
+        Tclp = gamma * T1p
+        
+        Kc = ((T1 + T2) / Tclp) / Kp
+        
+        Ti = T1 + T2
+        
+        Td = (T1 * T2) / T1 + T2
+        
+        return [Kc, Ti, Td] 
 
 #-----------------------------------        
 class PID:
