@@ -240,7 +240,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
     PLead2 = P.parameters['Tlead2']*s + 1
     
     #C(s) Controller :
-    Cs = Kc*(1 + 1 / (Ti*s) + (Td*s)/(Tfd * s + 1))
+    Cs = Kc*(1 + 1 / Ti*s + (Td*s)/(Tfd * s + 1))
     
     #P(s) Process :
     Ps = np.multiply(Ptheta,PGain)
@@ -249,7 +249,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
     Ps = np.multiply(Ps,PLead1)
     Ps = np.multiply(Ps,PLead2)
     
-    Ls = Ps * Cs
+    Ls = np.multiply(Ps,Cs)
     
     omegaC = None
     index_omegaC = None
@@ -257,8 +257,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
         if np.sign(20*np.log10(np.abs(Ls[i]))) != np.sign(20*np.log10(np.abs(Ls[i+1]))):
             omegaC = omega[i]
             index_omegaC = i
-            break
-            
+            break          
             
     # Calculate phase values
     phase_degrees = (180/np.pi)*np.unwrap(np.angle(Ls))
@@ -267,7 +266,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
     index_omegaU = np.argmin(np.abs(phase_degrees + 180))
 
     # Get the corresponding frequency
-    omegaU = omega[index_omegaU]            
+    omegaU = omega[index_omegaU]          
       
     if Show == True:
         
@@ -327,7 +326,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
         
 
     else:
-        return Ps
+        return Ls
 
 #-----------------------------------       
 
@@ -343,12 +342,12 @@ def IMC_Tuning(T1, T2, T1p, gamma, Kp, model):
     - gamma: Float, tuning parameter.
     - Kp: Float, process gain.
     - model: string, chooses the model to use.
-        - "A" : returns :
+        - "A" : returns : (PI)
                 - List: A list containing the calculated parameters in the following order:
                         - Kc: Float, controller gain.
                         - Ti: Float, integral time.
                         
-        - "B" : returns :
+        - "B" : returns : (PID)
                 - List: A list containing the calculated parameters in the following order:
                         - Kc: Float, controller gain.
                         - Ti: Float, integral time.
