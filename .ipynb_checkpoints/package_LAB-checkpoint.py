@@ -332,7 +332,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
     
 #-----------------------------------       
 
-def IMC_Tuning(T1, T2, T1p, gamma, Kp):
+def IMC_Tuning(T1, T2, T1p, gamma, Kp, model):
         
     """
         IMC_Tuning calculates the parameters for an Internal Model Control (IMC) tuning method.
@@ -343,30 +343,57 @@ def IMC_Tuning(T1, T2, T1p, gamma, Kp):
     - T1p: Float, time constant of the filter.
     - gamma: Float, tuning parameter.
     - Kp: Float, process gain.
-
-    Returns:
-    - List: A list containing the calculated parameters in the following order:
-        - Kc: Float, controller gain.
-        - Ti: Float, integral time.
-        - Td: Float, derivative time.
-        - Tclp: Float, closed-loop time constant of the process.
+    - model: string, chooses the model to use.
+        - "A" : returns :
+                - List: A list containing the calculated parameters in the following order:
+                        - Kc: Float, controller gain.
+                        - Ti: Float, integral time.
+                        
+        - "B" : returns :
+                - List: A list containing the calculated parameters in the following order:
+                        - Kc: Float, controller gain.
+                        - Ti: Float, integral time.
+                        - Td: Float, derivative time.
 
     Formula used:
-    - Tclp = gamma * T1p
-    - Kc = ((T1 + T2) / Tclp) / Kp
-    - Ti = T1 + T2
-    - Td = (T1 * T2) / (T1 + T2)
+        - "A" : 
+                - Tclp = gamma * T1p
+                - T = T1
+                - Kc = (T / Tclp) / Kp
+                - Ti = T
+                
+        - "B" : 
+                - Tclp = gamma * T1p
+                - Kc = ((T1 + T2) / Tclp) / Kp
+                - Ti = T1 + T2
+                - Td = (T1 * T2) / (T1 + T2)
+                
+                
     """     
     
-    Tclp = gamma * T1p
+    if (model == "A") :
+        
+        Tclp = gamma * T1p
+        
+        T = T1
+        
+        Kc = (T / Tclp) / Kp
+        
+        Ti = T
+        
+        return [Kc, Ti] 
+        
+    if (model == "B") :
     
-    Kc = ((T1 + T2) / Tclp) / Kp
-    
-    Ti = T1 + T2
-    
-    Td = (T1 * T2) / T1 + T2
-    
-    return [Kc, Ti, Td] 
+        Tclp = gamma * T1p
+        
+        Kc = ((T1 + T2) / Tclp) / Kp
+        
+        Ti = T1 + T2
+        
+        Td = (T1 * T2) / T1 + T2
+        
+        return [Kc, Ti, Td] 
 
 #-----------------------------------        
 class PID:
