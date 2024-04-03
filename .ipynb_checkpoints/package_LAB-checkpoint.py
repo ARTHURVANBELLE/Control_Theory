@@ -240,7 +240,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
     PLead2 = P.parameters['Tlead2']*s + 1
     
     #C(s) Controller :
-    Cs = Kc*(1 + 1 / Ti*s + (Td*s)/(Tfd * s + 1))
+    Cs = Kc*(1 + 1 / (Ti*s) + (Td*s)/(Tfd * s + 1))
     
     #P(s) Process :
     Ps = np.multiply(Ptheta,PGain)
@@ -302,7 +302,7 @@ def Margin(P, C, omega, Am=0, Phim=0, omegaC=0, omegaU=0, Show=True):
         ax_gain.vlines(x=omegaU, ymin=yminOmegaU, ymax=ymaxOmegaU, color='#11aa00', linestyle='solid', linewidth=5)
         ax_gain.text(displayAmX, displayAmY,'  20 log$_{10}$ A$_{m}$', color='black', fontsize=15, ha='left')
         ax_gain.set_ylabel('Amplitude' + '\n $|P(j\omega)|$ [dB]')
-        ax_gain.set_title('Bode plot of P')
+        ax_gain.set_title('Bode plot of L(s)')
         ax_gain.text(omegaC, gain_min - 4,'$\omega_{c}$', color='black', fontsize=15, ha='center')
         ax_gain.text(omegaU, gain_min - 4,'$\omega_{u}$', color='black', fontsize=15, ha='center')
         ax_gain.legend(loc='best')
