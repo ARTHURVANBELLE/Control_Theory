@@ -152,11 +152,12 @@ The appended values are based on the PID algorithm, the controller mode, and fee
     elif(Man[-1] == True and len(MVI)>=2):
         if ManFF:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1]
+            MVToAppend = MVMan[-1]
 
         else:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1] - MVFF[-1]
+            MVToAppend = MVMan[-1] + MVFF[-1]
         
-        MVToAppend = MVMan[-1]
         MVP.append(0)
     
             
